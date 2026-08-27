@@ -26,8 +26,12 @@ export class VncConnectionManager {
         debug: false,
         encodings: [
           VncClient.consts.encodings.raw, // Try raw encoding first for problematic servers
-          VncClient.consts.encodings.copyRect,
-          VncClient.consts.encodings.hextile
+          VncClient.consts.encodings.copyRect
+          // Do NOT offer hextile: nodejs-rfb 0.4.2's hextile decoder misses an `await`
+          // on the 4th byte read of 32bpp raw tiles. When a tile straddles a TCP chunk
+          // boundary with 1 byte left, the next read runs past the buffer end and throws
+          // RangeError [ERR_OUT_OF_RANGE] as an unhandled rejection (seen with TigerVNC,
+          // which strongly prefers hextile when it is advertised).
           // Removed zrle as it seems to cause "Invalid subencoding" errors on some servers
         ]
       });
@@ -39,18 +43,21 @@ export class VncConnectionManager {
       });
 
       vncClient.on('authenticated', () => {
-        const screenWidth = vncClient.clientWidth || 0;
-        const screenHeight = vncClient.clientHeight || 0;
-        console.error(`VNC authenticated, screen: ${screenWidth}x${screenHeight}`);
-        
-        // Request the initial full framebuffer
-        vncClient.requestFrameUpdate(false, 0, 0, screenWidth, screenHeight);
+        // NOTE: nodejs-rfb emits 'authenticated' before ServerInit is processed,
+        // so clientWidth/clientHeight are not known yet at this point.
+        console.error('VNC authenticated, waiting for initial framebuffer...');
       });
 
       vncClient.on('frameUpdated', () => {
         if (!hasReceivedInitialFramebuffer) {
           hasReceivedInitialFramebuffer = true;
-          console.error('Received initial framebuffer, connection ready');
+          const screenWidth = vncClient.clientWidth || 0;
+          const screenHeight = vncClient.clientHeight || 0;
+          console.error(`Received initial framebuffer, screen: ${screenWidth}x${screenHeight}, connection ready`);
+          if (!screenWidth || !screenHeight) {
+            reject(new Error(`VNC server reported invalid screen size: ${screenWidth}x${screenHeight}`));
+            return;
+          }
           resolve(vncClient);
         }
       });
