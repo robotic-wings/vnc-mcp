@@ -76,6 +76,37 @@ npm run build
 
 Please refer to the [VS Code documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)
 
+### HTTP Transport (Streamable HTTP)
+
+By default the server uses stdio. To expose it over HTTP instead:
+
+```bash
+# Via environment variables
+VNC_HOST=192.168.1.100 VNC_PORT=5900 VNC_PASSWORD=secret \
+MCP_TRANSPORT=http MCP_PORT=3000 mcp-vnc
+
+# Or via CLI arguments
+mcp-vnc --http --port 3000
+```
+
+The MCP endpoint is then available at `http://localhost:3000/mcp`. Client configuration example:
+
+```json
+{
+  "mcpServers": {
+    "vnc-controller": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `MCP_TRANSPORT` | `stdio` | Set to `http` to enable HTTP transport |
+| `MCP_PORT` | `3000` | HTTP listen port |
+
 ## 🛠️ Available Tools
 
 The MCP server provides the following tools for remote desktop control:

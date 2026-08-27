@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // src/index.ts
+import 'dotenv/config'; // 加载 .env 文件中的环境变量
 import { VncMcpServer } from './server.js';
 import { VncConfig } from './types.js';
 
@@ -25,4 +26,19 @@ const config: VncConfig = {
 };
 
 const server = new VncMcpServer(config);
-server.run().catch(console.error);
+
+// Transport: stdio (default) or HTTP
+// Enable HTTP via: MCP_TRANSPORT=http, or pass --http / http as CLI arg
+// HTTP port: MCP_PORT env var or --port <n> (default: 3000)
+const args = process.argv.slice(2);
+const useHttp = process.env.MCP_TRANSPORT === 'http' || args.includes('--http') || args.includes('http');
+
+if (useHttp) {
+  const portArgIndex = args.findIndex((a) => a === '--port');
+  const port = parseInt(
+    (portArgIndex !== -1 && args[portArgIndex + 1]) || process.env.MCP_PORT || '3000'
+  );
+  server.runHttp(port).catch(console.error);
+} else {
+  server.run().catch(console.error);
+}

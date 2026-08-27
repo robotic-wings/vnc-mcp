@@ -34,6 +34,7 @@
   "dependencies": {
     "@computernewb/nodejs-rfb": "^0.4.2",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.4.2",
     "sharp": "^0.34.0"
   },
   "devDependencies": {
