@@ -19,10 +19,13 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled rejection at:', promise, 'reason:', reason);
 });
 
+const timeout = parseInt(process.env.VNC_TIMEOUT || '');
+
 const config: VncConfig = {
   host: process.env.VNC_HOST || 'localhost',
   port: parseInt(process.env.VNC_PORT || '5900'),
-  password: process.env.VNC_PASSWORD
+  password: process.env.VNC_PASSWORD,
+  timeout: Number.isFinite(timeout) && timeout > 0 ? timeout : undefined
 };
 
 const server = new VncMcpServer(config);

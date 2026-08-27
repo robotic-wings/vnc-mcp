@@ -38,6 +38,13 @@ export class VncConnectionManager {
 
       let hasReceivedInitialFramebuffer = false;
 
+      // Every MCP tool call opens a fresh connection and waits for the initial
+      // frame, so this timeout effectively bounds each tool call.
+      const timeout = this.config.timeout ?? 30000;
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`VNC connection timeout (${timeout}ms)`));
+      }, timeout);
+
       vncClient.on('connected', () => {
         console.error(`Connected to VNC server at ${this.config.host}:${this.config.port}`);
       });
@@ -54,6 +61,7 @@ export class VncConnectionManager {
           const screenWidth = vncClient.clientWidth || 0;
           const screenHeight = vncClient.clientHeight || 0;
           console.error(`Received initial framebuffer, screen: ${screenWidth}x${screenHeight}, connection ready`);
+          clearTimeout(timeoutId);
           if (!screenWidth || !screenHeight) {
             reject(new Error(`VNC server reported invalid screen size: ${screenWidth}x${screenHeight}`));
             return;
@@ -64,6 +72,7 @@ export class VncConnectionManager {
 
       vncClient.on('error', (error) => {
         console.error(`VNC connection error: ${error.message}`);
+        clearTimeout(timeoutId);
         reject(new Error(`VNC connection error: ${error.message}`));
       });
 
@@ -80,10 +89,6 @@ export class VncConnectionManager {
       };
 
       vncClient.connect(connectionOptions);
-
-      setTimeout(() => {
-        reject(new Error('VNC connection timeout'));
-      }, 15000); // Increased timeout to wait for initial frame
     });
   }
 

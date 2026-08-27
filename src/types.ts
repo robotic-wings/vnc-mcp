@@ -5,6 +5,8 @@ export interface VncConfig {
   host: string;
   port: number;
   password?: string;
+  /** Timeout in ms for establishing a connection and receiving the initial frame (default: 30000) */
+  timeout?: number;
 }
 
 export interface CoordinateValidation {

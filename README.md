@@ -46,7 +46,8 @@ npm run build
       "env": {
         "VNC_HOST": "192.168.1.100",
         "VNC_PORT": "5900",
-        "VNC_PASSWORD": "your-vnc-password"
+        "VNC_PASSWORD": "your-vnc-password",
+        "VNC_TIMEOUT": "30000"
       }
     }
   }
@@ -65,12 +66,16 @@ npm run build
       "env": {
         "VNC_HOST": "192.168.1.100",
         "VNC_PORT": "5900",
-        "VNC_PASSWORD": "your-vnc-password"
+        "VNC_PASSWORD": "your-vnc-password",
+        "VNC_TIMEOUT": "30000"
       }
     }
   }
 }
 ```
+
+`VNC_TIMEOUT` (optional) sets how long each tool call waits for the VNC server to
+connect and deliver the initial frame, in milliseconds. Defaults to `30000`.
 
 ### VS Code
 
